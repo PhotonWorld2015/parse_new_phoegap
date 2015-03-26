@@ -8,7 +8,24 @@ initialize: function(appId, clientKey, successCallback, errorCallback) {
                  [appId, clientKey]
                  );
 },
-    
+getnotifications: function(successCallback, errorCallback) {
+   cordova.exec(
+                successCallback,
+                errorCallback,
+                'ParsePlugin',
+                'getnotifications',
+                []
+                );
+   },
+        updatereadStatus: function(id,flag,successCallback, errorCallback) {
+               cordova.exec(
+                            successCallback,
+                            errorCallback,
+                            'ParsePlugin',
+                            'updateReadmessage',
+                            [id,flag]
+                            );
+               },
 getInstallationId: function(successCallback, errorCallback) {
     cordova.exec(
                  successCallback,

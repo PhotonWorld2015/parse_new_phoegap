@@ -51,19 +51,19 @@
     if ([[UIApplication sharedApplication] respondsToSelector:@selector(registerUserNotificationSettings:)]) {
         UIUserNotificationSettings *settings =
         [UIUserNotificationSettings settingsForTypes:UIUserNotificationTypeAlert |
-         UIUserNotificationTypeBadge |
-         UIUserNotificationTypeSound
+                                                     UIUserNotificationTypeBadge |
+                                                     UIUserNotificationTypeSound
                                           categories:nil];
         [[UIApplication sharedApplication] registerUserNotificationSettings:settings];
         [[UIApplication sharedApplication] registerForRemoteNotifications];
     }
     else {
         [[UIApplication sharedApplication] registerForRemoteNotificationTypes:
-         UIRemoteNotificationTypeBadge |
-         UIRemoteNotificationTypeAlert |
-         UIRemoteNotificationTypeSound];
+            UIRemoteNotificationTypeBadge |
+            UIRemoteNotificationTypeAlert |
+            UIRemoteNotificationTypeSound];
     }
-    
+
     CDVPluginResult* pluginResult = nil;
     PFInstallation *currentInstallation = [PFInstallation currentInstallation];
     NSString *channel = [command.arguments objectAtIndex:0];
@@ -84,6 +84,52 @@
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+-(void)getnotifications:(CDVInvokedUrlCommand *)command
+
+{
+    NSUserDefaults *usserde=[NSUserDefaults standardUserDefaults];
+    NSArray *ar=[usserde valueForKey:@"pushMessage"];
+    
+    NSError *error;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:ar
+                                                       options:NSJSONWritingPrettyPrinted
+                                                         error:&error];
+    
+    CDVPluginResult* pluginResult = nil;
+    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+    NSArray *jsonArray=[[NSArray alloc]initWithObjects:jsonString, nil];
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:jsonArray];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+
+-(void)updateReadmessage:(CDVInvokedUrlCommand *)command
+{
+    NSUserDefaults *usserde=[NSUserDefaults standardUserDefaults];
+    NSArray *ar=[usserde valueForKey:@"pushMessage"];
+    
+    NSString *readFlag =[command.arguments objectAtIndex:1];
+    NSString *rowId=[command.arguments objectAtIndex:0];
+    for(NSDictionary *dict in ar)
+    {
+        NSString *rowValue=[NSString stringWithFormat:@"%@",[dict valueForKey:@"flag"]];
+        if( [rowValue isEqualToString:rowId])
+        {
+          [dict setValue:readFlag forKey:@"flag"];
+//            [usserde setObject:dict forKey:@"PushMesasge"];
+//            [usserde synchronize];
+          
+            [usserde removeObjectForKey:@"pushMessage"];
+            [usserde setObject:ar forKey:@"pushMessage"];
+            [usserde synchronize];
+            return;
+        }
+        
+    }
+    CDVPluginResult* pluginResult = nil;
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
 @end
 
 @implementation AppDelegate (CDVParsePlugin)
@@ -127,11 +173,53 @@ void MethodSwizzle(Class c, SEL originalSelector) {
 {
 }
 
+
 - (void)swizzled_application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo
 {
-    // Call existing method
     [self swizzled_application:application didReceiveRemoteNotification:userInfo];
     [PFPush handlePush:userInfo];
+    NSDictionary *apsInfo = [userInfo objectForKey:@"aps"];
+    NSString *pushMessage = [apsInfo objectForKey:@"alert"];
+    NSString *navigatepath =[userInfo objectForKey:@"navigate"];
+    if(pushMessage && pushMessage.length>0)
+    {
+        NSUserDefaults *userdefault=[NSUserDefaults standardUserDefaults];
+        NSMutableArray *ar=[[NSMutableArray alloc]init];
+        if(![userdefault valueForKey:@"pushMessage"])
+        {
+            NSMutableDictionary *jSONDict=[[NSMutableDictionary alloc]init];
+            [jSONDict setObject:[NSNumber numberWithInteger:[ar count]] forKey:@"id"];
+            [jSONDict setObject:pushMessage forKey:@"message"];
+            [jSONDict setObject:@"0" forKey:@"flag"];
+            [jSONDict setObject:navigatepath forKey:@"navigate"];
+            [jSONDict setObject:@"false" forKey:@"btnstatus"];
+            [ar addObject:jSONDict];
+        }
+        else
+        {
+            for(NSDictionary *dict in [userdefault valueForKey:@"pushMessage"])
+            {
+                [ar addObject:dict];
+            }
+            NSMutableArray *newarrau=[[NSMutableArray alloc]initWithArray:ar];
+            [ar removeAllObjects];
+            [ar addObjectsFromArray:newarrau];
+            NSMutableDictionary *jSONDict=[[NSMutableDictionary alloc]init];
+            [jSONDict setObject:[NSNumber numberWithInteger:[ar count]] forKey:@"id"];
+            [jSONDict setObject:pushMessage forKey:@"message"];
+            [jSONDict setObject:@"0" forKey:@"flag"];
+            [jSONDict setObject:navigatepath forKey:@"navigate"];
+            [jSONDict setObject:@"false" forKey:@"btnstatus"];
+            [ar addObject:jSONDict];
+
+        }
+        [userdefault setValue:ar forKey:@"pushMessage"];
+        [userdefault synchronize];
+    }
+}
+-(void)applicationDidBecomeActive:(UIApplication *)application
+{
+    [[UIApplication sharedApplication]setApplicationIconBadgeNumber:0];
 }
 
 @end
