@@ -91,9 +91,7 @@
     NSArray *ar=[usserde valueForKey:@"pushMessage"];
     
     NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:ar
-                                                       options:NSJSONWritingPrettyPrinted
-                                                         error:&error];
+     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:ar options:0 error:&error];
     
     CDVPluginResult* pluginResult = nil;
     NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
