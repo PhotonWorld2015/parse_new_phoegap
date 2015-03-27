@@ -91,14 +91,24 @@
     NSArray *ar=[usserde valueForKey:@"pushMessage"];
     
     NSError *error;
-        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:ar
-                                                       options:NSJSONWritingPrettyPrinted
-                                                         error:&error];
-    
-    CDVPluginResult* pluginResult = nil;
+    NSMutableArray *jsonArray=[[NSMutableArray alloc]init];
+    for(NSDictionary *dict in ar)
+    {
+        [jsonArray addObject:dict];
+    }
+    NSData * jsonData = [NSJSONSerialization dataWithJSONObject:jsonArray
+                                                        options:NSJSONWritingPrettyPrinted
+                                                          error:&error];
     NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    NSArray *jsonArray=[[NSArray alloc]initWithObjects:jsonString, nil];
-    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:jsonArray];
+    //NSArray *jsonArray=[[NSArray alloc]initWithObjects:jsonString, nil];
+//        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:ar
+//                                                       options:NSJSONWritingPrettyPrinted
+//                                                         error:&error];
+//    
+   CDVPluginResult* pluginResult = nil;
+//    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+//    NSArray *jsonArray=[[NSArray alloc]initWithObjects:jsonString, nil];
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jsonString];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
