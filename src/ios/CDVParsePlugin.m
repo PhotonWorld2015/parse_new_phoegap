@@ -91,24 +91,25 @@
     NSArray *ar=[usserde valueForKey:@"pushMessage"];
     
     NSError *error;
-    NSMutableArray *jsonArray=[[NSMutableArray alloc]init];
+    NSMutableArray *finalArray=[[NSMutableArray alloc]init];
     for(NSDictionary *dict in ar)
     {
-        [jsonArray addObject:dict];
+        NSData * jsonData = [NSJSONSerialization dataWithJSONObject:dict
+                                                            options:NSJSONWritingPrettyPrinted
+                                                              error:&error];
+        NSString *jsonString= [[NSString alloc] initWithBytes:[jsonData bytes] length:[jsonData length] encoding:NSUTF8StringEncoding];
+        [finalArray addObject:jsonString];
     }
-    NSData * jsonData = [NSJSONSerialization dataWithJSONObject:jsonArray
-                                                        options:NSJSONWritingPrettyPrinted
-                                                          error:&error];
-    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    //NSArray *jsonArray=[[NSArray alloc]initWithObjects:jsonString, nil];
-//        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:ar
-//                                                       options:NSJSONWritingPrettyPrinted
-//                                                         error:&error];
-//    
+    
+    
+   // NSData *json = [NSJSONSerialization dataWithJSONObject:array options:0 error:nil];
+    
+    //back
+ 
+    
+   
    CDVPluginResult* pluginResult = nil;
-//    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-//    NSArray *jsonArray=[[NSArray alloc]initWithObjects:jsonString, nil];
-    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jsonString];
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:finalArray];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
